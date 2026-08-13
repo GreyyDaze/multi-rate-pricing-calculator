@@ -12,5 +12,6 @@ export default defineConfig({
     globalSetup: "./vitest.global-setup.ts",
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.ts"],
+    fileParallelism: false,
   },
 });

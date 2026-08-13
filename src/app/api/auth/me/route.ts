@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import { requireAuth, AuthError } from "@/lib/auth/requireAuth";
+import { requireAuth } from "@/lib/auth/requireAuth";
 import { getPrisma } from "@/lib/prisma";
+import { errorResponse, success } from "@/lib/http";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,12 +13,8 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
-    return Response.json({ user });
+    return success({ user });
   } catch (err) {
-    if (err instanceof AuthError) {
-      return Response.json({ error: err.message }, { status: 401 });
-    }
-    console.error(err);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return errorResponse(err);
   }
 }
