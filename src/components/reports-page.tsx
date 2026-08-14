@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, Printer, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useToast } from "@/components/toast";
@@ -106,6 +106,16 @@ export function ReportsPage({ email }: { email?: string }) {
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
           )}
           {busy ? "Loading…" : "Refresh"}
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() =>
+            window.open(`/reports/print?from=${from}&to=${to}`, "_blank")
+          }
+        >
+          <Printer className="h-4 w-4" aria-hidden="true" />
+          Print
         </button>
       </form>
 

@@ -50,11 +50,11 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
           <div className="mt-14">
             <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-[-0.01em]">
-              Build quotes that compute themselves.
+              Quotes that compute themselves.
             </h2>
             <p className="mt-4 max-w-md text-[1.0625rem] leading-relaxed text-white/70">
-              Draft, edit and finalize invoices with trusted, reproducible totals — every
-              calculation runs on the server, not the browser.
+              Draft, edit and finalize quotes and invoices with trusted, reproducible totals —
+              every calculation runs on the server, not the browser.
             </p>
           </div>
 

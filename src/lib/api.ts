@@ -1,4 +1,6 @@
-export type DiscountType = "NONE" | "PERCENT" | "FIXED";
+import type { DiscountType } from "@/lib/calculations";
+
+export type { DiscountType };
 
 export interface UserView {
   id: string;

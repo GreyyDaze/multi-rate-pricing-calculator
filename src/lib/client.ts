@@ -1,10 +1,10 @@
-import { api, type DocumentView, type ReportSummary } from "@/lib/api";
+import { api, type DiscountType, type DocumentView, type LineView, type ReportSummary } from "@/lib/api";
 
 export interface LinePayload {
   description: string;
   quantity: number;
   unitPrice: number;
-  discountType: "NONE" | "PERCENT" | "FIXED";
+  discountType: DiscountType;
   discountValue: number;
   taxPercent: number;
 }
@@ -42,10 +42,14 @@ export function deleteDocument(id: string): Promise<{ ok: true }> {
   return api(`/api/documents/${id}`, { method: "DELETE" });
 }
 
+export function duplicateDocument(id: string): Promise<{ document: DocumentView }> {
+  return api(`/api/documents/${id}/duplicate`, { method: "POST" });
+}
+
 export function addLine(
   id: string,
   input: LinePayload,
-): Promise<{ line: DocumentView["lines"] extends (infer L)[] | undefined ? L : never; document: DocumentView }> {
+): Promise<{ line: LineView; document: DocumentView }> {
   return api(`/api/documents/${id}/lines`, {
     method: "POST",
     body: JSON.stringify(input),
@@ -56,7 +60,7 @@ export function updateLine(
   id: string,
   lineId: string,
   input: Partial<LinePayload>,
-): Promise<{ line: NonNullable<DocumentView["lines"]>[number]; document: DocumentView }> {
+): Promise<{ line: LineView; document: DocumentView }> {
   return api(`/api/documents/${id}/lines/${lineId}`, {
     method: "PATCH",
     body: JSON.stringify(input),

@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, Loader2, Plus, Trash2, TriangleAlert } from "lucide-react";
+import { Copy, FileText, Loader2, Plus, Printer, Trash2, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useToast } from "@/components/toast";
-import { createDocument, deleteDocument, listDocuments } from "@/lib/client";
+import { createDocument, deleteDocument, duplicateDocument, listDocuments } from "@/lib/client";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { ApiError, type DocumentView } from "@/lib/api";
 
@@ -62,6 +62,22 @@ export function DocumentsList({ email }: { email?: string }) {
     }
   }
 
+  async function handleDuplicate(doc: DocumentView) {
+    setBusy(true);
+    try {
+      const res = await duplicateDocument(doc.id);
+      router.push(`/documents/${res.document.id}`);
+      toast("success", "Document duplicated as a draft.");
+    } catch (err) {
+      toast(
+        "error",
+        err instanceof ApiError ? err.message : "Failed to duplicate the document.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleDelete() {
     if (!pendingDelete) return;
     setDeleting(true);
@@ -108,7 +124,7 @@ export function DocumentsList({ email }: { email?: string }) {
             Documents
           </h1>
           <p className="mt-2 text-[0.9375rem] text-secondary">
-            Create, edit and finalize quotes and invoices.
+            Draft, edit, duplicate and finalize quotes and invoices with server-computed totals.
           </p>
         </div>
         <button
@@ -181,10 +197,10 @@ export function DocumentsList({ email }: { email?: string }) {
             <ul className="overflow-hidden rounded-xl border border-neutral">
               <li className="hidden grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-neutral bg-tertiary/60 px-6 py-3 text-[0.8125rem] font-medium text-secondary sm:grid">
                 <span>Document</span>
-                <span className="flex w-88 items-center justify-end gap-4">
-                  <span className="w-28 text-left">Amount</span>
-                  <span className="w-24 text-center">Status</span>
-                  <span className="w-20" />
+                <span className="grid w-136 shrink-0 grid-cols-[7rem_6rem_17rem] items-center gap-4">
+                  <span className="text-left">Amount</span>
+                  <span className="text-center">Status</span>
+                  <span className="text-right">Actions</span>
                 </span>
               </li>
               {docs.map((doc) => (
@@ -204,33 +220,58 @@ export function DocumentsList({ email }: { email?: string }) {
                         {doc.customer} · {formatDate(doc.issueDate)}
                       </p>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4 sm:w-88 sm:justify-end">
-                      <span className="w-28 text-left font-medium">
+                    <div className="grid w-full shrink-0 grid-cols-[7rem_6rem_17rem] items-center gap-4 sm:w-136">
+                      <span className="text-left font-medium">
                         {formatCurrency(doc.grandTotal)}
                       </span>
-                      <span className="flex w-24 justify-center">
+                      <span className="flex justify-center">
                         <span
                           className={`${doc.status === "FINALIZED" ? "chip chip-success" : "chip"}`}
                         >
                           {STATUS_LABEL[doc.status]}
                         </span>
                       </span>
-                      {doc.status === "DRAFT" ? (
+                      <span className="flex items-center justify-end gap-1">
                         <button
                           type="button"
-                          className="btn btn-text w-20 justify-start px-2 text-[0.875rem] text-secondary hover:text-primary"
+                          className="btn btn-text px-2 text-[0.875rem] text-secondary hover:text-primary"
+                          title="Open printable view"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setPendingDelete(doc);
+                            window.open(`/documents/${doc.id}/print`, "_blank");
                           }}
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          Delete
+                          <Printer className="h-3.5 w-3.5" aria-hidden="true" />
+                          Print
                         </button>
-                      ) : (
-                        <span className="w-20" />
-                      )}
+                        <button
+                          type="button"
+                          className="btn btn-text px-2 text-[0.875rem] text-secondary hover:text-primary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            void handleDuplicate(doc);
+                          }}
+                        >
+                          <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                          Duplicate
+                        </button>
+                        {doc.status === "DRAFT" ? (
+                          <button
+                            type="button"
+                            className="btn btn-text px-2 text-[0.875rem] text-secondary hover:text-primary"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setPendingDelete(doc);
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            Delete
+                          </button>
+                        ) : null}
+                      </span>
                     </div>
                   </Link>
                 </li>

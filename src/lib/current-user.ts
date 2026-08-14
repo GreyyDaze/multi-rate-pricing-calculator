@@ -2,7 +2,12 @@ import { cookies } from "next/headers";
 import { getPrisma } from "./prisma";
 import { SESSION_COOKIE, verifySessionToken } from "./auth/session";
 
-export async function currentUserEmail(): Promise<string | null> {
+export interface CurrentUser {
+  id: string;
+  email: string;
+}
+
+export async function currentUser(): Promise<CurrentUser | null> {
   try {
     const store = await cookies();
     const token = store.get(SESSION_COOKIE)?.value;
@@ -11,10 +16,15 @@ export async function currentUserEmail(): Promise<string | null> {
     if (!userId) return null;
     const user = await getPrisma().user.findUnique({
       where: { id: userId },
-      select: { email: true },
+      select: { id: true, email: true },
     });
-    return user?.email ?? null;
+    return user ? { id: user.id, email: user.email } : null;
   } catch {
     return null;
   }
+}
+
+export async function currentUserEmail(): Promise<string | null> {
+  const user = await currentUser();
+  return user?.email ?? null;
 }

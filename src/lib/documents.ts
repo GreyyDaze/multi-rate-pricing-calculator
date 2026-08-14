@@ -6,43 +6,14 @@ import {
   calculateDocument,
   calculateLine,
   ValidationError,
-  type DiscountType,
   type DocumentTotals,
   type LineTotals,
 } from "./calculations";
 import { formatMoney } from "./money";
+import type { DiscountType, DocumentView, LineView } from "./api";
 
+export type { DiscountType, DocumentView, LineView };
 export const DISCOUNT_TYPES: readonly DiscountType[] = ["NONE", "PERCENT", "FIXED"];
-
-export interface DocumentView {
-  id: string;
-  title: string;
-  customer: string;
-  issueDate: string;
-  status: "DRAFT" | "FINALIZED";
-  subtotal: string;
-  totalDiscount: string;
-  totalTax: string;
-  grandTotal: string;
-  createdAt: string;
-  updatedAt: string;
-  lines?: LineView[];
-}
-
-export interface LineView {
-  id: string;
-  description: string;
-  quantity: string;
-  unitPrice: string;
-  discountType: DiscountType;
-  discountValue: string;
-  taxPercent: string;
-  subtotal: string;
-  discountAmount: string;
-  discountedAmount: string;
-  taxAmount: string;
-  lineTotal: string;
-}
 
 export interface RawLineInput {
   description?: unknown;
@@ -360,6 +331,56 @@ export async function deleteDocument(userId: string, documentId: string): Promis
   const document = await getOwnedDocument(userId, documentId);
   assertDraft(document);
   await getPrisma().document.delete({ where: { id: documentId } });
+}
+
+export async function duplicateDocument(userId: string, documentId: string): Promise<DocumentView> {
+  const source = await getOwnedDocument(userId, documentId);
+  const sourceLines = await getPrisma().lineItem.findMany({
+    where: { documentId },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const created = await getPrisma().$transaction(async (tx) => {
+    const createdDocument = await tx.document.create({
+      data: {
+        userId,
+        title: `${source.title} (copy)`,
+        customer: source.customer,
+        issueDate: source.issueDate,
+      },
+      select: DOCUMENT_SELECT,
+    });
+
+    if (sourceLines.length > 0) {
+      for (const line of sourceLines) {
+        const input: ResolvedLineInput = {
+          description: line.description,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          discountType: line.discountType,
+          discountValue: line.discountValue,
+          taxPercent: line.taxPercent,
+        };
+        let totals: LineTotals;
+        try {
+          totals = calculateLine(input);
+        } catch (error) {
+          toHttpError(error);
+        }
+        await tx.lineItem.create({
+          data: {
+            documentId: createdDocument.id,
+            ...input,
+            ...toLineWrite(totals),
+          },
+        });
+      }
+      await recomputeTotals(tx, createdDocument.id);
+    }
+    return createdDocument;
+  });
+
+  return getDocument(userId, created.id);
 }
 
 export async function addLine(

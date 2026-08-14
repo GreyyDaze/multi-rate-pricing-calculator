@@ -7,6 +7,7 @@ import {
   createDocument,
   deleteDocument,
   deleteLine,
+  duplicateDocument,
   finalizeDocument,
   getDocument,
   listDocuments,
@@ -213,6 +214,59 @@ describe("ownership and listing", () => {
       404,
       "Document not found",
     );
+  });
+});
+
+describe("duplicateDocument", () => {
+  it("copies a finalized document into a new draft with the same lines and totals", async () => {
+    const user = await makeUser(EMAIL_A);
+    const doc = await createDocument(user.id, { title: "Invoice #7", customer: "Acme" });
+    for (const raw of SAMPLE) {
+      await addLine(user.id, doc.id, parseLineInput(raw));
+    }
+    await finalizeDocument(user.id, doc.id);
+
+    const copy = await duplicateDocument(user.id, doc.id);
+    expect(copy.id).not.toBe(doc.id);
+    expect(copy.status).toBe("DRAFT");
+    expect(copy.title).toBe("Invoice #7 (copy)");
+    expect(copy.customer).toBe("Acme");
+    expect(copy.grandTotal).toBe("421.50");
+    expect(copy.lines?.length).toBe(3);
+    expect(copy.lines?.map((l) => l.description).sort()).toEqual([
+      "Widget A",
+      "Widget B",
+      "Widget C",
+    ]);
+
+    const original = await getDocument(user.id, doc.id);
+    expect(copy.lines?.map((l) => l.lineTotal).sort()).toEqual(
+      original.lines?.map((l) => l.lineTotal).sort(),
+    );
+    expect(copy.lines?.find((l) => l.description === "Widget A")).toMatchObject({
+      quantity: "2.00",
+      unitPrice: "100.00",
+      discountType: "PERCENT",
+      discountValue: "10.00",
+      taxPercent: "5.00",
+      lineTotal: "189.00",
+    });
+  });
+
+  it("duplicating a draft works too", async () => {
+    const user = await makeUser(EMAIL_A);
+    const doc = await createDocument(user.id, { title: "Draft", customer: "Acme" });
+    const copy = await duplicateDocument(user.id, doc.id);
+    expect(copy.status).toBe("DRAFT");
+    expect(copy.title).toBe("Draft (copy)");
+    expect(copy.lines).toEqual([]);
+  });
+
+  it("cannot duplicate another user's document (404)", async () => {
+    const userA = await makeUser(EMAIL_A);
+    const userB = await makeUser(EMAIL_B);
+    const doc = await createDocument(userA.id, { title: "A's", customer: "Acme" });
+    await expectHttpError(duplicateDocument(userB.id, doc.id), 404, "Document not found");
   });
 });
 

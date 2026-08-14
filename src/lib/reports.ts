@@ -2,16 +2,9 @@ import Decimal from "decimal.js";
 import { getPrisma } from "./prisma";
 import { HttpError } from "./http-error";
 import { formatMoney } from "./money";
+import type { ReportSummary } from "./api";
 
-export interface ReportSummary {
-  from: string;
-  to: string;
-  documentCount: number;
-  sumSubtotal: string;
-  sumTotalDiscount: string;
-  sumTotalTax: string;
-  sumGrandTotal: string;
-}
+export type { ReportSummary };
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 

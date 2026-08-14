@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
@@ -9,9 +10,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Copy,
   Loader2,
   Lock,
   Plus,
+  Printer,
   Save,
   Trash2,
   TriangleAlert,
@@ -23,6 +26,7 @@ import { useToast } from "@/components/toast";
 import {
   addLine,
   deleteLine,
+  duplicateDocument,
   finalizeDocument,
   getDocument,
   updateDocumentMeta,
@@ -183,7 +187,9 @@ export function DocumentEditor({
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const toast = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -346,6 +352,20 @@ export function DocumentEditor({
     }
   }
 
+  async function handleDuplicate() {
+    if (duplicating || !doc) return;
+    setDuplicating(true);
+    try {
+      const res = await duplicateDocument(doc.id);
+      router.push(`/documents/${res.document.id}`);
+      toast("success", "Document duplicated as a draft.");
+    } catch (err) {
+      toast("error", err instanceof ApiError ? err.message : "Failed to duplicate the document.");
+    } finally {
+      setDuplicating(false);
+    }
+  }
+
   async function handleFinalize() {
     setFinalizing(true);
     try {
@@ -456,22 +476,40 @@ export function DocumentEditor({
 
   return (
     <AppShell email={email}>
-      <div className="mb-10 flex items-center justify-between gap-4">
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
         <Link href="/" className="btn btn-text px-2">
           <ArrowLeft className="h-4 w-4" />
           Documents
         </Link>
-        <span
-          className={`chip ${finalized ? "chip-success" : "chip"}`}
-          aria-label={`Status: ${finalized ? "Finalized" : "Draft"}`}
-        >
-          {finalized ? (
-            <Lock className="h-3 w-3" aria-hidden="true" />
-          ) : (
-            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-          )}
-          {finalized ? "Finalized — read-only" : "Draft"}
-        </span>
+        <div className="flex items-center gap-3">
+          <span
+            className={`chip ${finalized ? "chip-success" : "chip"}`}
+            aria-label={`Status: ${finalized ? "Finalized" : "Draft"}`}
+          >
+            {finalized ? (
+              <Lock className="h-3 w-3" aria-hidden="true" />
+            ) : (
+              <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+            )}
+            {finalized ? "Finalized — read-only" : "Draft"}
+          </span>
+          <button
+            type="button"
+            className="btn btn-text text-[0.9375rem]"
+            onClick={() => void handleDuplicate()}
+          >
+            <Copy className="h-4 w-4" aria-hidden="true" />
+            Duplicate
+          </button>
+          <button
+            type="button"
+            className="btn btn-text text-[0.9375rem]"
+            onClick={() => window.open(`/documents/${doc.id}/print`, "_blank")}
+          >
+            <Printer className="h-4 w-4" aria-hidden="true" />
+            Print
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSaveMeta} className="card p-6 sm:p-8">
