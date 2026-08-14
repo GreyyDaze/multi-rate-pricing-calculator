@@ -87,7 +87,7 @@ function StepperNumber({
     if (disabled) return;
     let next = parseDecimal(value);
     if (next === null) {
-      next = delta > 0 ? (min ?? 0) : min ?? 0;
+      next = (min ?? 0) + delta;
     } else {
       next += delta;
     }
@@ -98,21 +98,28 @@ function StepperNumber({
 
   return (
     <div className={`flex items-stretch ${className}`}>
-      <button
-        type="button"
-        tabIndex={-1}
-        className="flex w-8 shrink-0 flex-col border border-r-0 border-neutral bg-tertiary/60 text-secondary transition-colors rounded-l-xl hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
-        onClick={() => applyStep(step)}
-        disabled={disabled}
-        aria-label="Increase"
-      >
-        <span className="grid flex-1 place-items-center">
+      <div className="flex w-8 shrink-0 flex-col overflow-hidden rounded-l-xl border border-r-0 border-neutral bg-tertiary/60 text-secondary">
+        <button
+          type="button"
+          tabIndex={-1}
+          className="flex flex-1 items-center justify-center transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
+          onClick={() => applyStep(step)}
+          disabled={disabled}
+          aria-label="Increase"
+        >
           <ChevronUp className="h-3 w-3" aria-hidden="true" />
-        </span>
-        <span className="grid flex-1 place-items-center border-t border-neutral">
+        </button>
+        <button
+          type="button"
+          tabIndex={-1}
+          className="flex flex-1 items-center justify-center border-t border-neutral transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
+          onClick={() => applyStep(-step)}
+          disabled={disabled}
+          aria-label="Decrease"
+        >
           <ChevronDown className="h-3 w-3" aria-hidden="true" />
-        </span>
-      </button>
+        </button>
+      </div>
       <input
         type="number"
         min={min}
@@ -123,7 +130,7 @@ function StepperNumber({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full min-w-0 rounded-r-xl border border-neutral bg-surface px-2 py-2 text-right text-[0.9375rem] outline-none transition-colors focus:border-secondary disabled:opacity-45 [appearance:textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none`}
+        className={`w-full min-w-[3.5rem] rounded-r-xl border border-neutral bg-surface px-2 py-2 text-right text-[0.9375rem] outline-none transition-colors focus:border-secondary disabled:opacity-45 [appearance:textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none`}
       />
     </div>
   );
@@ -645,7 +652,7 @@ export function DocumentEditor({
                       >
                         <td className="px-5 py-3">
                           <input
-                            className="input"
+                            className="input min-w-56"
                             placeholder="What is this line for?"
                             value={draft.description}
                             disabled={finalized}
@@ -677,7 +684,7 @@ export function DocumentEditor({
                           />
                         </td>
                         <td className="px-3 py-3">
-                          <div className="flex gap-1.5">
+                          <div className="flex gap-1.5 whitespace-nowrap">
 <select
                               className="input select w-[9.5rem] shrink-0"
                               value={draft.discountType}
