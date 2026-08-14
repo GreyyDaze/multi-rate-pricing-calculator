@@ -1,6 +1,16 @@
 "use client";
 
-import { Calculator, FileText, Loader2, LogOut, Menu, PieChart, X } from "lucide-react";
+import {
+  Calculator,
+  FileText,
+  Loader2,
+  LogOut,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PieChart,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -11,6 +21,7 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const nav = [
     { href: "/", label: "Documents", icon: FileText },
@@ -31,24 +42,26 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
     }
   }
 
-  const navLinks = nav.map((item) => {
-    const isActive = active(item.href);
-    const Icon = item.icon;
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        onClick={() => setMenuOpen(false)}
-        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.9375rem] font-medium transition-colors ${
-          isActive ? "bg-primary text-white" : "text-onsurface hover:bg-tertiary"
-        }`}
-        aria-current={isActive ? "page" : undefined}
-      >
-        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-        {item.label}
-      </Link>
-    );
-  });
+  const navLinks = (collapsed = false) =>
+    nav.map((item) => {
+      const isActive = active(item.href);
+      const Icon = item.icon;
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={() => setMenuOpen(false)}
+          title={collapsed ? item.label : undefined}
+          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.9375rem] font-medium transition-colors ${
+            collapsed ? "justify-center px-0" : ""
+          } ${isActive ? "bg-primary text-white" : "text-onsurface hover:bg-tertiary"}`}
+          aria-current={isActive ? "page" : undefined}
+        >
+          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {!collapsed ? item.label : null}
+        </Link>
+      );
+    });
 
   return (
     <div className="min-h-full">
@@ -79,7 +92,7 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
       {/* Mobile menu drawer */}
       {menuOpen ? (
         <div className="fixed inset-x-0 top-[3.75rem] z-40 border-b border-border bg-surface px-3 py-4 md:hidden">
-          <nav className="space-y-1">{navLinks}</nav>
+          <nav className="space-y-1">{navLinks()}</nav>
           <div className="mt-3 border-t border-border pt-3">
             <button
               type="button"
@@ -102,46 +115,80 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
 
       <div className="flex min-h-full">
         {/* Desktop sidebar */}
-        <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col border-r border-border bg-surface md:flex">
+        <aside
+          className={`fixed inset-y-0 left-0 z-20 hidden flex-col border-r border-border bg-surface transition-all md:flex ${
+            sidebarCollapsed ? "w-14" : "w-56"
+          }`}
+        >
           <div className="border-b border-border px-5 py-5">
-            <Link href="/" className="flex items-center gap-2.5" title="QuoteCalc">
+            {sidebarCollapsed ? (
               <Calculator className="h-5 w-5 text-primary" aria-hidden="true" />
-              <span className="text-[15px] font-semibold tracking-[-0.01em] text-primary">QuoteCalc</span>
-            </Link>
+            ) : (
+              <Link href="/" className="flex items-center gap-2.5" title="QuoteCalc">
+                <Calculator className="h-5 w-5 text-primary" aria-hidden="true" />
+                <span className="text-[15px] font-semibold tracking-[-0.01em] text-primary">QuoteCalc</span>
+              </Link>
+            )}
           </div>
 
           <nav className="flex-1 space-y-1 px-3 py-5">
-            <p className="px-3 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-secondary">
-              Menu
-            </p>
-            {navLinks}
+            {!sidebarCollapsed ? (
+              <p className="px-3 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-secondary">
+                Menu
+              </p>
+            ) : null}
+            {navLinks(sidebarCollapsed)}
           </nav>
 
           <div className="border-t border-border px-3 py-4">
-            {email ? (
+            {!sidebarCollapsed && email ? (
               <p className="mb-2 truncate px-3 text-[0.8125rem] text-secondary" title={email}>
                 {email}
               </p>
             ) : null}
             <button
               type="button"
-              onClick={handleLogout}
-              disabled={signingOut}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[0.9375rem] font-medium text-onsurface transition-colors hover:bg-tertiary ${
-                signingOut ? "cursor-progress opacity-60" : "cursor-pointer hover:text-primary"
+              onClick={() => setSidebarCollapsed((v) => !v)}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-onsurface transition-colors hover:bg-tertiary ${
+                sidebarCollapsed ? "justify-center px-0" : ""
               }`}
             >
-              {signingOut ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
               ) : (
-                <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <>
+                  <PanelLeftClose className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="text-[0.9375rem] font-medium">Collapse</span>
+                </>
               )}
-              {signingOut ? "Signing out…" : "Sign out"}
             </button>
+            {!sidebarCollapsed ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className={`mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[0.9375rem] font-medium text-onsurface transition-colors hover:bg-tertiary ${
+                  signingOut ? "cursor-progress opacity-60" : "cursor-pointer hover:text-primary"
+                }`}
+              >
+                {signingOut ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+                ) : (
+                  <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+                )}
+                {signingOut ? "Signing out…" : "Sign out"}
+              </button>
+            ) : null}
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 pt-16 pb-8 md:ml-56 md:pt-12 sm:px-8 sm:pb-10 lg:px-12 lg:pt-12 lg:pb-12">
+        <main
+          className={`min-w-0 flex-1 px-4 pt-20 pb-8 transition-all md:pt-12 sm:px-8 sm:pb-10 lg:px-12 lg:pt-12 lg:pb-12 ${
+            sidebarCollapsed ? "md:ml-14" : "md:ml-56"
+          }`}
+        >
           {children}
         </main>
       </div>
