@@ -1,26 +1,170 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-primary: #111400;
+  --color-secondary: #afafaf;
+  --color-tertiary: #f6f6f6;
+  --color-neutral: #ececeb;
+  --color-surface: #ffffff;
+  --color-onsurface: #161514;
+  --color-accent: #000000;
+  --color-card: #ffffff;
+  --color-border: #f6f6f6;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    padding-inline: 1.5rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease,
+      box-shadow 160ms ease, opacity 160ms ease;
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px var(--color-primary);
+  }
+  .btn-primary {
+    background: #171717;
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #2b2b2b;
+  }
+  .btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-onsurface);
+    border: 1px solid var(--color-neutral);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--color-secondary);
+    background: var(--color-surface);
+  }
+  .btn-text {
+    background: transparent;
+    color: var(--color-onsurface);
+    padding-inline: 0.875rem;
+  }
+  .btn-text:hover:not(:disabled) {
+    background: var(--color-tertiary);
+  }
+
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-neutral);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(17, 20, 0, 0.04);
+  }
+
+  .input {
+    width: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-neutral);
+    border-radius: 12px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--color-onsurface);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .input::placeholder {
+    color: var(--color-secondary);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(17, 20, 0, 0.06);
+  }
+  .input:disabled {
+    color: var(--color-secondary);
+    cursor: not-allowed;
+    background: var(--color-tertiary);
+  }
+
+  .select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23161514' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 1.75rem;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+    background: var(--color-tertiary);
+    color: var(--color-onsurface);
+  }
+  .chip-success {
+    background: #eaf4ea;
+    color: #1f5b1f;
+  }
+  .chip-outline {
+    background: transparent;
+    border: 1px solid var(--color-neutral);
+    color: var(--color-secondary);
+  }
+
+  .label {
+    display: block;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: var(--color-onsurface);
+    margin-bottom: 0.375rem;
+  }
+
+  .field-error {
+    margin-top: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: #b3261e;
+  }
+  .row {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .table-head {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-secondary);
+    white-space: nowrap;
+  }
 }

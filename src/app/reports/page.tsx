@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { DocumentsList } from "@/components/documents-list";
+import { ReportsPage } from "@/components/reports-page";
 import { currentUserEmail } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
-export default async function DocumentsPage() {
+export default async function ReportsRoute() {
   const email = await currentUserEmail();
   if (!email) redirect("/login");
-  return <DocumentsList email={email} />;
+  return <ReportsPage email={email} />;
 }
