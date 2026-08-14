@@ -5,13 +5,18 @@ import {
   ArrowLeft,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
   Loader2,
   Lock,
   Plus,
   Save,
   Trash2,
+  TriangleAlert,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useToast } from "@/components/toast";
@@ -53,6 +58,71 @@ function parseDecimal(value: string): number | null {
   if (trimmed === "") return null;
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
+}
+
+function StepperNumber({
+  value,
+  onChange,
+  disabled,
+  min,
+  max,
+  step = 1,
+  placeholder,
+  className = "",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  placeholder?: string;
+  className?: string;
+}) {
+  const applyStep = (delta: number) => {
+    if (disabled) return;
+    let next = parseDecimal(value);
+    if (next === null) {
+      next = delta > 0 ? (min ?? 0) : min ?? 0;
+    } else {
+      next += delta;
+    }
+    if (min !== undefined && next < min) next = min;
+    if (max !== undefined && next > max) next = max;
+    onChange(String(next));
+  };
+
+  return (
+    <div className={`flex items-stretch ${className}`}>
+      <button
+        type="button"
+        tabIndex={-1}
+        className="flex w-8 shrink-0 flex-col border border-r-0 border-neutral bg-tertiary/60 text-secondary transition-colors rounded-l-xl hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
+        onClick={() => applyStep(step)}
+        disabled={disabled}
+        aria-label="Increase"
+      >
+        <span className="grid flex-1 place-items-center">
+          <ChevronUp className="h-3 w-3" aria-hidden="true" />
+        </span>
+        <span className="grid flex-1 place-items-center border-t border-neutral">
+          <ChevronDown className="h-3 w-3" aria-hidden="true" />
+        </span>
+      </button>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        inputMode="decimal"
+        placeholder={placeholder}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full min-w-0 rounded-r-xl border border-neutral bg-surface px-2 py-2 text-right text-[0.9375rem] outline-none transition-colors focus:border-secondary disabled:opacity-45 [appearance:textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none`}
+      />
+    </div>
+  );
 }
 
 function toLinePayload(draft: LineDraft): LinePayload {
@@ -103,10 +173,16 @@ export function DocumentEditor({
   const [savingLine, setSavingLine] = useState<string | null>(null);
   const [finalizing, setFinalizing] = useState(false);
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [savingAll, setSavingAll] = useState(false);
   const [pendingDeleteLine, setPendingDeleteLine] = useState<LineDraft | null>(null);
   const [deletingLine, setDeletingLine] = useState(false);
+  const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set());
   const [meta, setMeta] = useState({ title: "", customer: "", issueDate: "" });
   const [nextDraft, setNextDraft] = useState(1);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -145,9 +221,38 @@ export function DocumentEditor({
 
   function updateDraft(key: string, patch: Partial<LineDraft>) {
     setDrafts((prev) => prev.map((d) => (d.key === key ? { ...d, ...patch } : d)));
+    setDirtyKeys((prev) => new Set(prev).add(key));
   }
 
-  async function handleSaveMeta(e?: React.FormEvent) {
+  useEffect(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const check = () => {
+      setCanScrollLeft(el.scrollLeft > 8);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+    };
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      el.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [drafts.length]);
+
+  function scrollTableRight() {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: Math.max(320, el.clientWidth * 0.6), behavior: "smooth" });
+  }
+
+  function scrollTableLeft() {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: -Math.max(320, el.clientWidth * 0.6), behavior: "smooth" });
+  }
+
+  async function handleSaveMeta(e?: React.FormEvent): Promise<boolean> {
     e?.preventDefault();
     setSavingMeta(true);
     try {
@@ -159,23 +264,32 @@ export function DocumentEditor({
       const res = await updateDocumentMeta(id, payload);
       applyDocument(res.document);
       toast("success", "Document details saved.");
+      return true;
     } catch (err) {
       toast("error", err instanceof ApiError ? err.message : "Failed to save document details.");
+      return false;
     } finally {
       setSavingMeta(false);
     }
   }
 
   function addNewLine() {
+    const key = `new-${nextDraft}`;
     setDrafts((prev) => [...prev, EMPTY_DRAFT(nextDraft)]);
+    setDirtyKeys((prev) => new Set(prev).add(key));
     setNextDraft((n) => n + 1);
   }
 
   function removeDraft(key: string) {
     setDrafts((prev) => prev.filter((d) => d.key !== key));
+    setDirtyKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
   }
 
-  async function saveLine(draft: LineDraft) {
+  async function saveLine(draft: LineDraft): Promise<boolean> {
     setSavingLine(draft.key);
     try {
       if (draft.id) {
@@ -190,9 +304,16 @@ export function DocumentEditor({
           prev.map((d) => (d.key === draft.key ? toDraft(res.line) : d)),
         );
       }
+      setDirtyKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(draft.key);
+        return next;
+      });
       toast("success", "Line item saved.");
+      return true;
     } catch (err) {
       toast("error", err instanceof ApiError ? err.message : "Failed to save the line.");
+      return false;
     } finally {
       setSavingLine(null);
     }
@@ -269,6 +390,62 @@ export function DocumentEditor({
 
   const computedLine = (draft: LineDraft): LineView | undefined =>
     draft.id ? savedLines[draft.id] : undefined;
+
+  const hasUnsavedMeta =
+    !finalized &&
+    (meta.title !== doc.title ||
+      meta.customer !== doc.customer ||
+      meta.issueDate !== formatDate(doc.issueDate));
+
+  const hasUnsavedChanges = !finalized && (hasUnsavedMeta || drafts.some((d) => dirtyKeys.has(d.key)));
+
+  function openFinalizeDialog() {
+    if (hasUnsavedChanges) {
+      setShowUnsavedDialog(true);
+      return;
+    }
+    setShowFinalizeDialog(true);
+  }
+
+  async function handleSaveAllAndFinalize() {
+    setSavingAll(true);
+    try {
+      if (hasUnsavedMeta) {
+        const ok = await handleSaveMeta();
+        if (!ok) {
+          setShowUnsavedDialog(false);
+          return;
+        }
+      }
+      const dirtyDrafts = drafts.filter((d) => dirtyKeys.has(d.key));
+      for (const d of dirtyDrafts) {
+        const ok = await saveLine(d);
+        if (!ok) {
+          setShowUnsavedDialog(false);
+          return;
+        }
+      }
+      setShowUnsavedDialog(false);
+      setShowFinalizeDialog(true);
+    } catch {
+      toast("error", "Failed to save your changes. Please try again.");
+      setShowUnsavedDialog(false);
+    } finally {
+      setSavingAll(false);
+    }
+  }
+
+  function handleDiscardAndFinalize() {
+    setDrafts(Object.values(savedLines).map(toDraft));
+    setDirtyKeys(new Set());
+    setMeta({
+      title: doc!.title,
+      customer: doc!.customer,
+      issueDate: formatDate(doc!.issueDate),
+    });
+    setShowUnsavedDialog(false);
+    setShowFinalizeDialog(true);
+  }
 
   const totals: { label: string; value: string; strong?: boolean }[] = [
     { label: "Subtotal", value: formatCurrency(doc.subtotal) },
@@ -370,20 +547,23 @@ export function DocumentEditor({
           ) : null}
         </div>
 
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] border-collapse">
+        <div className="card relative w-full max-w-full overflow-hidden">
+          <div
+            ref={tableScrollRef}
+            className="max-h-[70vh] max-w-full overflow-x-auto overflow-y-auto overscroll-contain qc-hide-scrollbar"
+          >
+            <table className="w-full min-w-[1200px] border-collapse">
               <colgroup>
                 <col className="w-auto" />
+                <col className="w-28" />
+                <col className="w-40" />
+                <col className="w-72" />
+                <col className="w-28" />
+                <col className="w-40" />
                 <col className="w-24" />
-                <col className="w-28" />
-                <col className="w-52" />
-                <col className="w-28" />
-                <col className="w-44" />
-                <col className="w-28" />
               </colgroup>
               <thead>
-                <tr className="border-b border-neutral bg-tertiary/60">
+                <tr className="sticky top-0 z-10 border-b border-neutral bg-tertiary">
                   <th className="table-head px-5 py-3 text-left">Description</th>
                   <th className="table-head px-3 py-3 text-left">Qty</th>
                   <th className="table-head px-3 py-3 text-left">Unit price</th>
@@ -437,33 +617,31 @@ export function DocumentEditor({
                           />
                         </td>
                         <td className="px-3 py-3">
-                          <input
-                            className="input text-right"
-                            inputMode="decimal"
-                            placeholder="1"
+                          <StepperNumber
+                            min={1}
                             value={draft.quantity}
                             disabled={finalized}
-                            onChange={(e) =>
-                              updateDraft(draft.key, { quantity: e.target.value })
+                            placeholder="1"
+                            onChange={(v) =>
+                              updateDraft(draft.key, { quantity: v })
                             }
                           />
                         </td>
                         <td className="px-3 py-3">
-                          <input
-                            className="input text-right"
-                            inputMode="decimal"
-                            placeholder="0.00"
+                          <StepperNumber
+                            min={0}
                             value={draft.unitPrice}
                             disabled={finalized}
-                            onChange={(e) =>
-                              updateDraft(draft.key, { unitPrice: e.target.value })
+                            placeholder="0.00"
+                            onChange={(v) =>
+                              updateDraft(draft.key, { unitPrice: v })
                             }
                           />
                         </td>
                         <td className="px-3 py-3">
                           <div className="flex gap-1.5">
-                            <select
-                              className="input select flex-1"
+<select
+                              className="input select w-[9.5rem] shrink-0"
                               value={draft.discountType}
                               disabled={finalized}
                               onChange={(e) =>
@@ -476,27 +654,27 @@ export function DocumentEditor({
                               <option value="PERCENT">Percent</option>
                               <option value="FIXED">Fixed</option>
                             </select>
-                            <input
-                              className="input w-20 text-right"
-                              inputMode="decimal"
-                              placeholder="0"
+                            <StepperNumber
+                              min={0}
+                              max={draft.discountType === "PERCENT" ? 100 : undefined}
                               value={draft.discountValue}
                               disabled={finalized || draft.discountType === "NONE"}
-                              onChange={(e) =>
-                                updateDraft(draft.key, { discountValue: e.target.value })
+                              placeholder="0"
+                              onChange={(v) =>
+                                updateDraft(draft.key, { discountValue: v })
                               }
                             />
                           </div>
                         </td>
                         <td className="px-3 py-3">
-                          <input
-                            className="input text-right"
-                            inputMode="decimal"
-                            placeholder="0"
+                          <StepperNumber
+                            min={0}
+                            max={100}
                             value={draft.taxPercent}
                             disabled={finalized}
-                            onChange={(e) =>
-                              updateDraft(draft.key, { taxPercent: e.target.value })
+                            placeholder="0"
+                            onChange={(v) =>
+                              updateDraft(draft.key, { taxPercent: v })
                             }
                           />
                         </td>
@@ -541,6 +719,26 @@ export function DocumentEditor({
               </tbody>
             </table>
           </div>
+          {canScrollLeft ? (
+            <button
+              type="button"
+              onClick={scrollTableLeft}
+              className="absolute left-4 top-[calc(50%+1.5rem)] z-10 grid h-10 w-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-white/30 bg-white/20 text-onsurface shadow-lg backdrop-blur-lg transition-all hover:bg-white/35"
+              aria-label="Scroll table left"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+          ) : null}
+          {canScrollRight ? (
+            <button
+              type="button"
+              onClick={scrollTableRight}
+              className="absolute right-4 top-[calc(50%+1.5rem)] z-10 grid h-10 w-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-white/30 bg-white/20 text-onsurface shadow-lg backdrop-blur-lg transition-all hover:bg-white/35"
+              aria-label="Scroll table right"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -555,7 +753,7 @@ export function DocumentEditor({
               <button
                 type="button"
                 className="btn btn-primary mt-6"
-                onClick={() => setShowFinalizeDialog(true)}
+                onClick={() => openFinalizeDialog()}
                 disabled={finalizing}
               >
                 <BusyIcon busy={finalizing} />
@@ -630,6 +828,55 @@ export function DocumentEditor({
           if (!deletingLine) setPendingDeleteLine(null);
         }}
       />
+
+      {showUnsavedDialog ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Unsaved changes"
+        >
+          <div className="card w-full max-w-sm px-6 py-6">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-tertiary">
+              <TriangleAlert className="h-5 w-5 text-primary" aria-hidden="true" />
+            </div>
+            <h2 className="text-lg font-semibold text-onsurface">You have unsaved changes</h2>
+            <div className="mt-1 text-[0.875rem] leading-relaxed text-secondary">
+              Save your changes so your final totals include them, or discard them before
+              finalizing.
+            </div>
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                type="button"
+                className="btn btn-primary w-full"
+                onClick={() => void handleSaveAllAndFinalize()}
+                disabled={savingAll}
+              >
+                {savingAll ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : null}
+                {savingAll ? "Saving…" : "Save & finalize"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary w-full"
+                onClick={handleDiscardAndFinalize}
+                disabled={savingAll}
+              >
+                Discard & finalize
+              </button>
+              <button
+                type="button"
+                className="btn btn-text w-full"
+                onClick={() => setShowUnsavedDialog(false)}
+                disabled={savingAll}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
   );
 }

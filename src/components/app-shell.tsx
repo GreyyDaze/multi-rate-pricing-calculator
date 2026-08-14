@@ -91,7 +91,7 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
         </div>
       </aside>
 
-      <main className="ml-56 flex-1 px-6 py-10 sm:px-12 sm:py-12">{children}</main>
+      <main className="ml-56 min-w-0 flex-1 px-6 py-10 sm:px-12 sm:py-12">{children}</main>
     </div>
   );
 }
