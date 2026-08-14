@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -13,6 +13,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const { refresh } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const isLogin = mode === "login";
@@ -77,17 +78,32 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           <label htmlFor="password" className="label">
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete={isLogin ? "current-password" : "new-password"}
-            required
-            minLength={8}
-            placeholder={isLogin ? "Your password" : "At least 8 characters"}
-            className="input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete={isLogin ? "current-password" : "new-password"}
+              required
+              minLength={8}
+              placeholder={isLogin ? "Your password" : "At least 8 characters"}
+              className="input pr-11"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-secondary transition-colors hover:text-onsurface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
         <button type="submit" className="btn btn-primary w-full" disabled={busy}>
           {busy ? (
