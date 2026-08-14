@@ -151,7 +151,7 @@ export function DocumentsList({ email }: { email?: string }) {
       ) : (
         <>
           {stats ? (
-            <ul className="mb-8 grid grid-cols-3 gap-4">
+            <ul className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {statCards.map((card) => (
                 <li key={card.label} className="card px-6 py-5">
                   <p className="text-[0.8125rem] font-medium text-secondary">
@@ -196,7 +196,7 @@ export function DocumentsList({ email }: { email?: string }) {
             </div>
           ) : (
             <ul className="overflow-hidden rounded-xl border border-neutral">
-              <li className="hidden grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-neutral bg-tertiary/60 px-6 py-3 text-[0.8125rem] font-medium text-secondary sm:grid">
+              <li className="hidden grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-neutral bg-tertiary/60 px-6 py-3 text-[0.8125rem] font-medium text-secondary lg:grid">
                 <span>Document</span>
                 <span className="grid w-136 shrink-0 grid-cols-[7rem_6rem_17rem] items-center gap-4">
                   <span className="text-left">Amount</span>
@@ -211,7 +211,7 @@ export function DocumentsList({ email }: { email?: string }) {
                 >
                   <Link
                     href={`/documents/${doc.id}`}
-                    className="grid grid-cols-1 items-center gap-2 px-6 py-5 transition-colors hover:bg-tertiary/40 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4"
+                    className="grid grid-cols-1 items-center gap-2 px-6 py-5 transition-colors hover:bg-tertiary/40 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-4"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-[0.9375rem] font-medium">
@@ -221,18 +221,18 @@ export function DocumentsList({ email }: { email?: string }) {
                         {doc.customer} · {formatDate(doc.issueDate)}
                       </p>
                     </div>
-                    <div className="grid w-full shrink-0 grid-cols-[7rem_6rem_17rem] items-center gap-4 sm:w-136">
-                      <span className="text-left font-medium">
+                    <div className="flex w-full shrink-0 flex-wrap items-center gap-x-4 gap-y-2 lg:grid lg:w-136 lg:grid-cols-[7rem_6rem_17rem] lg:items-center lg:gap-4">
+                      <span className="font-medium">
                         {formatCurrency(doc.grandTotal)}
                       </span>
-                      <span className="flex justify-center">
+                      <span className="flex justify-center sm:justify-center">
                         <span
                           className={`${doc.status === "FINALIZED" ? "chip chip-success" : "chip"}`}
                         >
                           {STATUS_LABEL[doc.status]}
                         </span>
                       </span>
-                      <span className="flex items-center justify-end gap-1">
+                      <span className="flex basis-full items-center justify-end gap-1 sm:basis-auto">
                         <button
                           type="button"
                           className="btn btn-text px-2 text-[0.875rem] text-secondary hover:text-primary"

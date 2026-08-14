@@ -16,8 +16,8 @@ const HIGHLIGHTS = [
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-[100dvh] flex-1 items-center justify-center gap-16 bg-tertiary/60 px-6 py-10 lg:pr-16 lg:pl-6">
-      <aside className="relative hidden h-full flex-1 overflow-hidden rounded-3xl bg-primary text-white lg:block">
+    <div className="flex min-h-[100dvh] flex-1 items-center justify-center gap-8 bg-tertiary/60 px-4 py-8 sm:px-6 sm:py-10 md:gap-12 md:pr-16 md:pl-6 xl:gap-16">
+      <aside className="relative hidden h-full flex-1 overflow-hidden rounded-3xl bg-primary text-white md:block">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -36,7 +36,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           aria-hidden="true"
         />
 
-        <div className="relative flex h-full flex-col px-14 py-12">
+        <div className="relative flex h-full flex-col px-8 py-10 sm:px-12 xl:px-14">
           <Link
             href="/"
             className="flex items-center gap-2.5"
@@ -95,7 +95,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       <main className="w-full max-w-md shrink-0">
         <Link
           href="/"
-          className="mb-10 flex items-center gap-2.5 lg:hidden"
+          className="mb-8 flex items-center gap-2.5 md:hidden sm:mb-10"
           title="QuoteCalc"
         >
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-white">
@@ -103,7 +103,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           </span>
           <span className="text-[17px] font-semibold tracking-[-0.01em] text-primary">QuoteCalc</span>
         </Link>
-        <div className="card px-8 py-10 sm:px-10">{children}</div>
+        <div className="card px-5 py-8 sm:px-10 sm:py-10">{children}</div>
       </main>
     </div>
   );

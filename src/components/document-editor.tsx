@@ -483,12 +483,12 @@ export function DocumentEditor({
 
   return (
     <AppShell email={email}>
-      <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 sm:mb-10 sm:gap-4">
         <Link href="/" className="btn btn-text px-2">
           <ArrowLeft className="h-4 w-4" />
           Documents
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <span
             className={`chip ${finalized ? "chip-success" : "chip"}`}
             aria-label={`Status: ${finalized ? "Finalized" : "Draft"}`}
@@ -498,7 +498,10 @@ export function DocumentEditor({
             ) : (
               <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
             )}
-            {finalized ? "Finalized — read-only" : "Draft"}
+            <span className="sm:hidden">{finalized ? "Finalized" : "Draft"}</span>
+            <span className="hidden sm:inline">
+              {finalized ? "Finalized — read-only" : "Draft"}
+            </span>
           </span>
           <button
             type="button"
@@ -520,7 +523,7 @@ export function DocumentEditor({
       </div>
 
       <form onSubmit={handleSaveMeta} className="card p-6 sm:p-8">
-        <div className="grid gap-6 sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,1fr)] sm:items-end">
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,1fr)] xl:items-end">
           <div className="row">
             <label htmlFor="title" className="label">
               Title
@@ -615,7 +618,7 @@ export function DocumentEditor({
                   <th className="table-head px-3 py-3 text-left">Discount</th>
                   <th className="table-head px-3 py-3 text-left">Tax %</th>
                   <th className="table-head px-5 py-3 text-right">Line total</th>
-                  <th className="table-head px-4 py-3 text-right">
+                  <th className="table-head sticky right-0 z-20 bg-tertiary px-4 py-3 text-right shadow-[-8px_0_16px_-12px_rgba(0,0,0,0.25)]">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
@@ -728,7 +731,7 @@ export function DocumentEditor({
                             {line ? formatCurrency(line.lineTotal) : "—"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="sticky right-0 z-10 bg-surface px-4 py-3 text-right shadow-[-8px_0_16px_-12px_rgba(0,0,0,0.25)]">
                           {!finalized ? (
                             <div className="flex justify-end gap-1">
                               <button
