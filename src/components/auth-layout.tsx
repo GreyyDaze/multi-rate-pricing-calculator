@@ -9,9 +9,9 @@ const PREVIEW_LINES = [
 ];
 
 const HIGHLIGHTS = [
-  { icon: CircleDollarSign, label: "Server math" },
-  { icon: Lock, label: "Immutable audit" },
-  { icon: FileCheck2, label: "Finalize anytime" },
+  { icon: CircleDollarSign, label: "To-the-cent math" },
+  { icon: Lock, label: "Immutable finalize" },
+  { icon: FileCheck2, label: "Any status, anytime" },
 ];
 
 export function AuthLayout({ children }: { children: ReactNode }) {
@@ -50,11 +50,12 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
           <div className="mt-14">
             <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-[-0.01em]">
-              Quotes that compute themselves.
+              Every number you can trust.
             </h2>
             <p className="mt-4 max-w-md text-[1.0625rem] leading-relaxed text-white/70">
-              Draft, edit and finalize quotes and invoices with trusted, reproducible totals —
-              every calculation runs on the server, not the browser.
+              Quotes and invoices whose totals are always right to the cent —
+              discounts and tax applied correctly, nothing lost in rounding,
+              and final numbers locked in when you finalize.
             </p>
           </div>
 

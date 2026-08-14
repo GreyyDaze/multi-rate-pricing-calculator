@@ -124,7 +124,8 @@ export function DocumentsList({ email }: { email?: string }) {
             Documents
           </h1>
           <p className="mt-2 text-[0.9375rem] text-secondary">
-            Draft, edit, duplicate and finalize quotes and invoices with server-computed totals.
+            Draft, edit, duplicate and finalize quotes and invoices — exact totals,
+            right to the cent.
           </p>
         </div>
         <button
@@ -173,8 +174,8 @@ export function DocumentsList({ email }: { email?: string }) {
                 No documents yet
               </h2>
               <p className="mx-auto mt-2 max-w-sm text-[0.9375rem] text-secondary">
-                Create your first quote or invoice and the server will keep
-                every total accurate and final.
+                Create your first quote or invoice — totals calculated exactly,
+                right to the cent.
               </p>
               <button
                 type="button"

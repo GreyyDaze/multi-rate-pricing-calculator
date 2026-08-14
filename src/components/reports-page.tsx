@@ -64,7 +64,7 @@ export function ReportsPage({ email }: { email?: string }) {
       <div className="mb-10">
         <h1 className="text-xl font-semibold tracking-[-0.01em] sm:text-2xl">Report</h1>
         <p className="mt-2 text-base text-secondary">
-          Totals across finalized and draft documents by issue date.
+          Trusted totals across your quotes and invoices, filtered by issue date.
         </p>
       </div>
 

@@ -54,8 +54,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       </h1>
       <p className="mt-4 max-w-md text-[0.9375rem] leading-relaxed text-secondary">
         {isLogin
-          ? "Access your quotes and invoices — all totals are computed and stored by the server."
-          : "Set up your workspace in seconds."}
+          ? "Access your quotes and invoices — exact totals, locked in and ready to send."
+          : "Create quotes and invoices with totals that are always right to the cent."}
       </p>
 
       <form className="mt-12 space-y-6" onSubmit={handleSubmit}>

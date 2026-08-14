@@ -574,7 +574,7 @@ export function DocumentEditor({
           <div>
             <h2 className="text-xl font-semibold tracking-[-0.01em]">Line items</h2>
             <p className="mt-1 text-[0.875rem] text-secondary">
-              Each row is validated and its totals are computed by the server on save.
+              Each row is validated and its totals are calculated exactly on save.
             </p>
           </div>
           {!finalized ? (
@@ -785,8 +785,8 @@ export function DocumentEditor({
           {!finalized ? (
             <div className="card p-6 sm:p-8">
               <h2 className="text-lg font-semibold tracking-[-0.01em]">Finalize</h2>              <p className="mt-2 text-[0.875rem] leading-relaxed text-secondary">
-                Finalizing locks this document and makes it read-only. The server re-validates
-                every line and stores the final totals as an immutable snapshot.
+                Finalizing locks this document and makes it read-only. Every line is
+                re-checked and the final totals are stored as an immutable snapshot.
               </p>
               <button
                 type="button"
@@ -836,7 +836,7 @@ export function DocumentEditor({
       <ConfirmDialog
         open={showFinalizeDialog}
         title="Finalize document?"
-        message="Finalizing locks this document and makes it read-only. The server re-validates every line and stores the final totals as an immutable snapshot. This action cannot be undone."
+        message="Finalizing locks this document and makes it read-only. Every line is re-checked and the final totals are stored as an immutable snapshot. This action cannot be undone."
         confirmLabel={finalizing ? "Finalizing…" : "Finalize"}
         busy={finalizing}
         icon={<Lock className="h-5 w-5 text-primary" aria-hidden="true" />}

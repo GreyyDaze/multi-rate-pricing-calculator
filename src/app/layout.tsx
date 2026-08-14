@@ -3,8 +3,27 @@ import { ToastProvider } from "@/components/toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QuoteCalc",
-  description: "Build, edit and finalize quotes with trusted server-computed totals.",
+  metadataBase: new URL("https://multi-rate-pricing-calculator.vercel.app"),
+  title: {
+    default: "QuoteCalc — Quotes & invoices with exact totals",
+    template: "%s | QuoteCalc",
+  },
+  description:
+    "Draft, edit, duplicate and finalize quotes and invoices with totals that are always exact to the cent. Per-line discounts and tax applied correctly, immutable finalized documents, and date-range reports.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    title: "QuoteCalc — Quotes & invoices with exact totals",
+    description:
+      "Quotes and invoices with money math that is exact to the cent, immutable finalization, and per-user date-range reports.",
+    siteName: "QuoteCalc",
+  },
+  keywords: [
+    "quote calculator",
+    "invoice generation",
+    "exact totals",
+    "pricing calculator",
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
